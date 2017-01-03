@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 
 #include <boost/make_shared.hpp>
 
@@ -21,14 +22,43 @@ using namespace mathcalc;
 class MathCalcHandler : public MathCalcIf
 {
 public:
-  MathCalcHandler()
+  MathCalcHandler(const TConnectionInfo& connInfo) :
+    iprot_(connInfo.input),
+    oprot_(connInfo.output)
   {
   }
 
-  void ping()
+private:
+  void ping() override
   {
-    cout << "ping()" << endl;
+    cout << "Sending message responce..." << endl;
+    send_message("This is asyncronyous message!");
+    cout << "Sending ping response..." << endl;
   }
+
+  void message(string&) override
+  {
+    assert(false);
+  }
+
+private:
+  void send_message(const string& msg)
+  {
+    int32_t seqid = 0;
+    MathCalc_message_result result;
+    result.success = msg;
+    result.__isset.success = true;
+
+    oprot_->writeMessageBegin("message", ::apache::thrift::protocol::T_ONEWAY, seqid);
+    result.write(oprot_.get());
+    oprot_->writeMessageEnd();
+    oprot_->getTransport()->writeEnd();
+    oprot_->getTransport()->flush();
+  }
+
+private:
+  boost::shared_ptr<TProtocol> iprot_;
+  boost::shared_ptr<TProtocol> oprot_;
 };
 
 class MathCalcCloneFactory : virtual public MathCalcIfFactory {
@@ -37,7 +67,7 @@ class MathCalcCloneFactory : virtual public MathCalcIfFactory {
   {
   }
 
-  MathCalcIf* getHandler(const ::apache::thrift::TConnectionInfo& connInfo) override
+  MathCalcIf* getHandler(const TConnectionInfo& connInfo) override
   {
     boost::shared_ptr<TSocket> sock = boost::dynamic_pointer_cast<TSocket>(connInfo.transport);
     cout << "Incoming connection\n";
@@ -45,7 +75,7 @@ class MathCalcCloneFactory : virtual public MathCalcIfFactory {
     cout << "\tPeerHost: "    << sock->getPeerHost() << "\n";
     cout << "\tPeerAddress: " << sock->getPeerAddress() << "\n";
     cout << "\tPeerPort: "    << sock->getPeerPort() << "\n";
-    return new MathCalcHandler;
+    return new MathCalcHandler(connInfo);
   }
 
   void releaseHandler(MathCalcIf* handler) override
