@@ -1,10 +1,11 @@
-namespace cpp shared
+namespace cpp mathcalc
 
 struct SharedStruct {
   1: i32 key
   2: string value
 }
 
-service SharedService {
-  SharedStruct getStruct(1: i32 key)
+service MathCalc
+{
+  void ping(),
 }

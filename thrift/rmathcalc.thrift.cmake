@@ -1,13 +1,15 @@
 set(RMC_THRIFT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/rmathcalc.thrift)
 
 set(RMC_THRIFT_GENERATED
-  gen-cpp/SharedService.cpp
-  gen-cpp/SharedService.h
+  gen-cpp/MathCalc.cpp
+  gen-cpp/MathCalc.h
   gen-cpp/rmathcalc_constants.cpp
   gen-cpp/rmathcalc_constants.h
   gen-cpp/rmathcalc_types.cpp
   gen-cpp/rmathcalc_types.h
   )
+
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 add_custom_command(
   OUTPUT ${RMC_THRIFT_GENERATED}
