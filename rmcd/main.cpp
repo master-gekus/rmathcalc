@@ -29,6 +29,11 @@ public:
   {
     cout << "ping()" << endl;
   }
+
+  void taskList(TaskList& _return)
+  {
+    cout << "taskList()" << endl;
+  }
 };
 
 class MathCalcCloneFactory : virtual public MathCalcIfFactory {
