@@ -27,12 +27,34 @@ public:
 
   void ping()
   {
-    cout << "ping()" << endl;
+    cout << "ping() called." << endl;
   }
 
   void taskList(TaskList& _return)
   {
-    cout << "taskList()" << endl;
+    cout << "taskList() called." << endl;
+  }
+
+  void createTask(OpResult& _return, const TaskType::type type,
+               const std::vector<int64_t> & params) override
+  {
+    cout << "createTask() called." << endl;
+    _return.__set_success(false);
+    _return.__set_message("Not implemented now.");
+  }
+
+  void killTask(OpResult& _return, const int32_t id) override
+  {
+    cout << "killTask() called." << endl;
+    _return.__set_success(false);
+    _return.__set_message("Not implemented now.");
+  }
+
+  void takeTask(OpResult& _return, const int32_t id) override
+  {
+    cout << "takeTask() called." << endl;
+    _return.__set_success(false);
+    _return.__set_message("Not implemented now.");
   }
 };
 
