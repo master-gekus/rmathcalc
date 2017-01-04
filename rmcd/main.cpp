@@ -7,9 +7,10 @@
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/server/TThreadedServer.h>
 
-#include "gen-cpp/MathCalc.h"
+#include "math_calc_handler.h"
 
 using namespace std;
+
 using namespace apache::thrift;
 using namespace apache::thrift::concurrency;
 using namespace apache::thrift::protocol;
@@ -18,53 +19,13 @@ using namespace apache::thrift::server;
 
 using namespace mathcalc;
 
-class MathCalcHandler : public MathCalcIf
-{
-public:
-  MathCalcHandler()
-  {
-  }
-
-  void ping()
-  {
-    cout << "ping() called." << endl;
-  }
-
-  void taskList(TaskList& _return)
-  {
-    cout << "taskList() called." << endl;
-  }
-
-  void createTask(OpResult& _return, const TaskType::type type,
-               const std::vector<int64_t> & params) override
-  {
-    cout << "createTask() called." << endl;
-    _return.__set_success(false);
-    _return.__set_message("Not implemented now.");
-  }
-
-  void killTask(OpResult& _return, const int32_t id) override
-  {
-    cout << "killTask() called." << endl;
-    _return.__set_success(false);
-    _return.__set_message("Not implemented now.");
-  }
-
-  void takeTask(OpResult& _return, const int32_t id) override
-  {
-    cout << "takeTask() called." << endl;
-    _return.__set_success(false);
-    _return.__set_message("Not implemented now.");
-  }
-};
-
 class MathCalcCloneFactory : virtual public MathCalcIfFactory {
  public:
   ~MathCalcCloneFactory()
   {
   }
 
-  MathCalcIf* getHandler(const ::apache::thrift::TConnectionInfo& connInfo) override
+  MathCalcIf* getHandler(const TConnectionInfo& connInfo) override
   {
     boost::shared_ptr<TSocket> sock = boost::dynamic_pointer_cast<TSocket>(connInfo.transport);
     cout << "Incoming connection\n";
