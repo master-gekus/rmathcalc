@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include <boost/algorithm/string.hpp>
 
@@ -29,6 +30,65 @@ MathCalcClientApp::~MathCalcClientApp()
   if (nullptr != client_)
     delete client_;
   client_ = nullptr;
+}
+
+bool
+MathCalcClientApp::process_list()
+{
+  TaskList list;
+
+  try
+    {
+      client_->taskList(list);
+    }
+  catch(TException& tx)
+    {
+      cout << "THRIFT exception: " << tx.what() << endl;
+      return false;
+    }
+
+  if (list.empty())
+    {
+      cout << "No active tasks." << endl;
+    }
+  else
+    {
+      cout << list.size() << " active task(s):" << endl;
+      cout << "    ID State     Task" << endl;
+      cout << "------ --------- -------------------------------------------------" << endl;
+      for (const Task& task : list)
+        {
+          cout << setw(6) << task.id << " ";
+
+          string state("<invalid>");
+          auto ts = _TaskState_VALUES_TO_NAMES.find(task.state);
+          if (ts != _TaskState_VALUES_TO_NAMES.cend())
+            state = ts->second;
+          cout << setw(10) << left << state;
+
+          string type("<unknown>");
+          auto tt = _TaskType_VALUES_TO_NAMES.find(task.type);
+          if (tt != _TaskType_VALUES_TO_NAMES.cend())
+            type = tt->second;
+          cout << type;
+
+          if (!task.params.empty())
+            {
+              cout << " (";
+              for (size_t i = 0; i < task.params.size(); i++)
+                {
+                  if (0 < i)
+                    cout << ", ";
+                  cout << task.params[i];
+                }
+              cout << ")";
+            }
+
+          cout << endl;
+        }
+    }
+
+  return true;
 }
 
 bool
@@ -76,6 +136,9 @@ MathCalcClientApp::process_command(char cmd, const std::string& params)
 
     case 'P':
       return process_ping();
+
+    case 'L':
+      return process_list();
 
     default:
       cout << "Unknown command: '" << cmd << "'." << endl;

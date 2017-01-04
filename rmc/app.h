@@ -23,6 +23,7 @@ private:
   bool process_command(char cmd, const std::string& params);
   bool process_help();
   bool process_ping();
+  bool process_list();
 
 private:
   mathcalc::MathCalcClient* client_;
