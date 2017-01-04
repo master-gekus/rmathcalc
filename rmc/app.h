@@ -20,6 +20,9 @@ public:
 private:
   bool connect(const std::string& host, int port);
   int workloop();
+  bool process_command(char cmd, const std::string& params);
+  bool process_help();
+  bool process_ping();
 
 private:
   mathcalc::MathCalcClient* client_;
