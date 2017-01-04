@@ -33,7 +33,7 @@ service MathCalc
 {
   void ping();
   TaskList taskList();
-  OpResult createTask(TaskType type, list<i64> params);
-  OpResult killTask(i32 id);
-  OpResult takeTask(i32 id);
+  OpResult createTask(1: TaskType type, 2: list<i64> params);
+  OpResult killTask(1: i32 id);
+  OpResult takeTask(1: i32 id);
 }
