@@ -24,6 +24,9 @@ private:
   bool process_help();
   bool process_ping();
   bool process_list();
+  bool process_factorization(const std::string& params);
+  bool process_kill(const std::string& params);
+  bool process_take(const std::string& params);
 
 private:
   mathcalc::MathCalcClient* client_;

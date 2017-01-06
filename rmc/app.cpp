@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <limits>
 
 #include <boost/algorithm/string.hpp>
 
@@ -32,20 +33,157 @@ MathCalcClientApp::~MathCalcClientApp()
   client_ = nullptr;
 }
 
+#define THRIFT_CALL(...) \
+try \
+  { \
+    __VA_ARGS__; \
+  } \
+catch(TException& tx) \
+  { \
+    cout << "THRIFT exception: " << tx.what() << endl; \
+    return false; \
+  }
+
+namespace
+{
+  bool _check_op_result(const OpResult& res, const char *messgae)
+  {
+    if (res.success)
+      return true;
+
+    cout << messgae;
+
+    if (res.__isset.task)
+      cout << " (task #" << res.task.id << ")";
+
+    if (res.__isset.message)
+      {
+        cout << ": " << res.message;
+      }
+    else
+      {
+        cout << ". No error description received.";
+      }
+
+    cout << endl;
+
+    return false;
+  }
+}
+
+bool
+MathCalcClientApp::process_factorization(const std::string& params)
+{
+  uint64_t value = 0;
+  try
+    {
+      value = std::stoull(params, nullptr, 0);
+    }
+  catch(...)
+    {
+    }
+
+  if (2ULL > value)
+    {
+      cout << "Invalid number. Number must be a positive integer in range 2.."
+           << numeric_limits<uint64_t>::max() << endl;
+      return true;
+    }
+
+  OpResult res;
+  THRIFT_CALL(client_->createTask(res, TaskType::Factorization,
+                                  std::vector<int64_t>{static_cast<int64_t>(value)}));
+
+  if (!_check_op_result(res, "Error creating task"))
+    return true;
+
+  cout << "Factorization task #" << res.task.id << " (of " << value << ") created." << endl;
+
+  return true;
+}
+
+bool
+MathCalcClientApp::process_kill(const std::string& params)
+{
+  int32_t value = 0;
+  try
+    {
+      value = std::stoi(params, nullptr, 0);
+    }
+  catch(...)
+    {
+    }
+
+  if (1 > value)
+    {
+      cout << "Invalid task ID. Task ID must be a positive integer number."<< endl;
+      return true;
+    }
+
+  OpResult res;
+  THRIFT_CALL(client_->killTask(res, value));
+
+  if (!_check_op_result(res, "Error kill task"))
+    return true;
+
+  cout << "Task #" << res.task.id << " killed." << endl;
+
+  return true;
+}
+
+bool
+MathCalcClientApp::process_take(const std::string& params)
+{
+  int32_t value = 0;
+  try
+    {
+      value = std::stoi(params, nullptr, 0);
+    }
+  catch(...)
+    {
+    }
+
+  if (1 > value)
+    {
+      cout << "Invalid task ID. Task ID must be a positive integer number."<< endl;
+      return true;
+    }
+
+  OpResult res;
+  THRIFT_CALL(client_->takeTask(res, value));
+
+  if (!_check_op_result(res, "Error taking task"))
+    return true;
+
+  switch (res.task.type)
+    {
+    case TaskType::Factorization:
+      {
+        cout << "Factorization of " << res.task.params[0] << ": ";
+        for (size_t i = 0; i < res.result.size(); i++)
+          {
+            if (0 != i)
+              cout << ", ";
+            cout << res.result[i];
+          }
+        cout << endl;
+      }
+      break;
+
+    default:
+      cout << "Unknown task type (" << static_cast<int>(res.task.type)
+           << ". Result can not be shown." << endl;
+      break;
+    }
+
+  return true;
+}
+
 bool
 MathCalcClientApp::process_list()
 {
   TaskList list;
-
-  try
-    {
-      client_->taskList(list);
-    }
-  catch(TException& tx)
-    {
-      cout << "THRIFT exception: " << tx.what() << endl;
-      return false;
-    }
+  THRIFT_CALL(client_->taskList(list));
 
   if (list.empty())
     {
@@ -94,17 +232,9 @@ MathCalcClientApp::process_list()
 bool
 MathCalcClientApp::process_ping()
 {
-  try
-    {
-      client_->ping();
-      cout << "Ping successfull." << endl;
-      return true;
-    }
-  catch(TException& tx)
-    {
-      cout << "THRIFT exception: " << tx.what() << endl;
-      return false;
-    }
+  THRIFT_CALL(client_->ping());
+  cout << "Ping successfull." << endl;
+  return true;
 }
 
 bool
@@ -112,11 +242,19 @@ MathCalcClientApp::process_help()
 {
   cout
     << "Avaible commands:\n"
-    << "  '?', 'h':\n"
+    << "  ?, h:\n"
     << "    Display this help.\n\n"
-    << "  'Q':\n"
+    << "  f: <number>:\n"
+    << "    Create task for integer factorization of <number>.\n\n"
+    << "  l:\n"
+    << "    Display list of running and completed tasks.\n\n"
+    << "  k <task-id>:\n"
+    << "    Kill running or completed task. Results will be lost.\n\n"
+    << "  t <task-id>:\n"
+    << "    Take result of completed task.\n\n"
+    << "  q:\n"
     << "    Quit application.\n\n"
-    << "  'P':\n"
+    << "  p:\n"
     << "    Ping server.\n";
 
   return true;
@@ -139,6 +277,15 @@ MathCalcClientApp::process_command(char cmd, const std::string& params)
 
     case 'L':
       return process_list();
+
+    case 'F':
+      return process_factorization(params);
+
+    case 'K':
+      return process_kill(params);
+
+    case 'T':
+      return process_take(params);
 
     default:
       cout << "Unknown command: '" << cmd << "'." << endl;
@@ -191,17 +338,9 @@ MathCalcClientApp::connect(const std::string& host, int port)
   boost::shared_ptr<TTransport> socket(new TSocket(host, port));
   boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
 
-  try
-    {
-      cout << "Trying connect to " << host << ":" << port << "..." << endl;
-      transport->open();
-      cout << "Connection established. Type 'q' to exit, '?' for help." << endl;
-    }
-  catch(TException& tx)
-    {
-      cout << "THRIFT exception: " << tx.what() << endl;
-      return 1;
-    }
+  cout << "Trying connect to " << host << ":" << port << "..." << endl;
+  THRIFT_CALL(transport->open());
+  cout << "Connection established. Type 'q' to exit, '?' for help." << endl;
 
   boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
   client_ = new MathCalcClient(protocol);
