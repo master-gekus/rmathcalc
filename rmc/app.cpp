@@ -97,7 +97,7 @@ MathCalcClientApp::process_factorization(const std::string& params)
   if (!_check_op_result(res, "Error creating task"))
     return true;
 
-  cout << "Factorization task #" << res.task.id << " (of " << value << ") created." << endl;
+  cout << "Task #" << res.task.id << " (factorization of " << value << ") created." << endl;
 
   return true;
 }
@@ -159,12 +159,12 @@ MathCalcClientApp::process_take(const std::string& params)
     {
     case TaskType::Factorization:
       {
-        cout << "Factorization of " << res.task.params[0] << ": ";
+        cout << "Factorization of " << static_cast<uint64_t>(res.task.params[0]) << ": ";
         for (size_t i = 0; i < res.result.size(); i++)
           {
             if (0 != i)
               cout << ", ";
-            cout << res.result[i];
+            cout << static_cast<uint64_t>(res.result[i]);
           }
         cout << endl;
       }
@@ -196,7 +196,7 @@ MathCalcClientApp::process_list()
       cout << "------ --------- -------------------------------------------------" << endl;
       for (const Task& task : list)
         {
-          cout << setw(6) << task.id << " ";
+          cout << setw(6) << right << task.id << " ";
 
           string state("<invalid>");
           auto ts = _TaskState_VALUES_TO_NAMES.find(task.state);
@@ -210,17 +210,18 @@ MathCalcClientApp::process_list()
             type = tt->second;
           cout << type;
 
+          cout << right;
           if (!task.params.empty())
-            {
-              cout << " (";
-              for (size_t i = 0; i < task.params.size(); i++)
-                {
-                  if (0 < i)
-                    cout << ", ";
-                  cout << task.params[i];
-                }
-              cout << ")";
-            }
+              {
+                cout << " (";
+                for (size_t i = 0; i < task.params.size(); i++)
+                  {
+                    if (0 < i)
+                      cout << ", ";
+                    cout << static_cast<uint64_t>(task.params[i]);
+                  }
+                cout << ")";
+              }
 
           cout << endl;
         }
