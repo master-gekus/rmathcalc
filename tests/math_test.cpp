@@ -60,6 +60,7 @@ namespace test_sqrt
 
 namespace test_primes
 {
+  // ///////////////////////////////////////////////////////////////////////////////////////
   TEST(cons_primes, integrity)
   {
     size_t count = _const_primes_count();
@@ -96,6 +97,55 @@ namespace test_primes
       }
   }
 
+  // ///////////////////////////////////////////////////////////////////////////////////////
+  struct is_prime_params
+  {
+    uint32_t value_;
+    bool is_prime_;
+  };
+
+  ::std::ostream& operator<<(::std::ostream& os, const is_prime_params& p)
+  {
+    return os << "{Value: " << p.value_ << " is " << (p.is_prime_ ? "prime" : "complex") << "}";
+  }
+
+  class is_prime : public ::testing::TestWithParam<is_prime_params>
+  {
+  };
+
+  TEST_P(is_prime, is_prime)
+  {
+    is_prime_params p = GetParam();
+    EXPECT_EQ(math::is_prime(p.value_), p.is_prime_);
+  }
+
+  const is_prime_params _is_prime_data[] = {
+    {2, true},
+    {3, true},
+    {4, false},
+    {5, true},
+    {6, false},
+    {7, true},
+    {8, false},
+    {9, false},
+    {10, false},
+    {2011, true},
+    {2015, false},
+    {2016, false},
+    {2017, true},
+    {2027, true},
+    {8089, true},
+    {8093, true},
+    {8101, true},
+    {16369, true},
+    {16381, true},
+    {16411, true},
+    {17865, false},
+  };
+
+  INSTANTIATE_TEST_CASE_P(is_prime, is_prime, ::testing::ValuesIn(_is_prime_data));
+
+  // ///////////////////////////////////////////////////////////////////////////////////////
   struct next_prime_params
   {
     uint32_t value_;

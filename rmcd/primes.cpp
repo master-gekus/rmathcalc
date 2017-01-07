@@ -277,6 +277,14 @@ uint32_t _const_prime(size_t index)
 }
 #endif
 
+bool math::is_prime(uint32_t value, std::function<void()> check_interrupt)
+{
+  if (const_primes[const_primes_count - 1] >= value)
+    return ((*std::lower_bound(const_primes, &(const_primes[const_primes_count]), value)) == value);
+
+  return false;
+}
+
 uint32_t math::next_prime(uint32_t value, std::function<void()> check_interrupt)
 {
   uint32_t last_check = const_primes[const_primes_count - 1];

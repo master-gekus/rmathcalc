@@ -53,15 +53,23 @@ namespace math
   }
 
   /**
-   * @brief Calculates next prime value
-   * @param value The value from which to search for the next prime number.
-   * @param check_interrupt Interrupt check point.
-   * @return The first prime number greater than specified.
-   *
-   * If the calculated prime number exceeds maximum of uint32_t, 0 returned.
+   * @brief Checks for value is a prime number
+   * @param value Value to check
+   * @param check_interrupt Interrupt check point (see description)
+   * @return true, if value is a prime number
    *
    * check_interrupt is regulary called during calculation and can be used to interrupt process
    * by throwing an exception. For example,this can be ::boost::this_thread::interruption_point()
+   */
+  bool is_prime(uint32_t value, std::function<void()> check_interrupt = nullptr);
+
+  /**
+   * @brief Calculates next prime value
+   * @param value The value from which to search for the next prime number
+   * @param check_interrupt Interrupt check point (see description of \ref is_prime)
+   * @return The first prime number greater than specified
+   *
+   * If the calculated prime number exceeds maximum of uint32_t, 0 returned.
    */
   uint32_t next_prime(uint32_t value, std::function<void()> check_interrupt = nullptr);
 }
