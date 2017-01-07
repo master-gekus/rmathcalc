@@ -4,6 +4,9 @@
 
 #include "primes.h"
 
+size_t _const_primes_count();
+uint32_t _const_prime(size_t index);
+
 namespace test_sqrt
 {
   struct test_params
@@ -53,5 +56,45 @@ namespace test_sqrt
     test_params{std::numeric_limits<int64_t>::max(), 3037000499},
     test_params{std::numeric_limits<uint64_t>::max(), 4294967295}
   ));
+}
+
+namespace test_primes
+{
+  TEST(cons_primes, integrity)
+  {
+    size_t count = _const_primes_count();
+    EXPECT_GT(count, 2);
+    EXPECT_EQ(_const_prime(0), 2);
+    EXPECT_EQ(_const_prime(1), 3);
+
+    uint32_t last_checked = 3;
+    for (size_t i = 2; i < count;)
+      {
+        last_checked += 2;
+        uint32_t root = math::sqrt_floor(last_checked);
+        bool is_complex = false;
+        for (size_t j = 1; !is_complex; ++j)
+          {
+            uint32_t prime = _const_prime(j);
+            if (prime > root)
+              break;
+            if (0 == (last_checked % prime))
+              is_complex = true;
+          }
+
+        if (is_complex)
+          continue;
+
+        if (_const_prime(i) != last_checked)
+          {
+            FAIL() << "Integration of const primes corrupt at index " << i << ": Expected "
+                   << last_checked << ", received " << _const_prime(i);
+            break;
+          }
+
+        ++i;
+      }
+  }
+
 }
 

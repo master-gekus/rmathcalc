@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
   )
 
 add_dependencies(${PROJECT_NAME} googletest)
+add_definitions(-DGTEST_INVOKED)
 
 if(NOT WIN32 OR MINGW)
   target_link_libraries(${PROJECT_NAME}
