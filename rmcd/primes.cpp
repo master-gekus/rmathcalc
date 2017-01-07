@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "primes.h"
 
 namespace
@@ -260,12 +262,13 @@ namespace
     17707, 17713, 17729, 17737, 17747, 17749, 17761, 17783,
     17789, 17791, 17807, 17827, 17837, 17839, 17851, 17863,
   };
+  const size_t const_primes_count = sizeof(const_primes)/sizeof(const_primes[0]);
 }
 
 #ifdef GTEST_INVOKED
 size_t _const_primes_count()
 {
-  return sizeof(const_primes)/sizeof(const_primes[0]);
+  return const_primes_count;
 }
 
 uint32_t _const_prime(size_t index)
@@ -273,4 +276,15 @@ uint32_t _const_prime(size_t index)
   return const_primes[index];
 }
 #endif
+
+uint32_t math::next_prime(uint32_t value, std::function<void()> check_interrupt)
+{
+  uint32_t last_check = const_primes[const_primes_count - 1];
+
+  if (last_check > value)
+    return *std::upper_bound(const_primes, &(const_primes[const_primes_count]), value);
+
+  return 0;
+}
+
 

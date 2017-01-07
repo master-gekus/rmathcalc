@@ -11,13 +11,13 @@ namespace test_sqrt
 {
   struct test_params
   {
-    uint64_t value;
-    uint32_t sqrt_floor;
+    uint64_t value_;
+    uint32_t sqrt_floor_;
   };
 
   ::std::ostream& operator<<(::std::ostream& os, const test_params& p)
   {
-    return os << "{Value: " << p.value << "; Sqrt: " << p.sqrt_floor << ";}";
+    return os << "{Value: " << p.value_ << "; Sqrt: " << p.sqrt_floor_ << ";}";
   }
 
   class sqrt_floor : public ::testing::TestWithParam<test_params>
@@ -27,7 +27,7 @@ namespace test_sqrt
   TEST_P(sqrt_floor, simple_test)
   {
     test_params p = GetParam();
-    EXPECT_EQ(math::sqrt_floor(p.value), p.sqrt_floor);
+    EXPECT_EQ(math::sqrt_floor(p.value_), p.sqrt_floor_);
   }
 
   INSTANTIATE_TEST_CASE_P(sqrt_floor, sqrt_floor, ::testing::Values(
@@ -96,5 +96,52 @@ namespace test_primes
       }
   }
 
+  struct next_prime_params
+  {
+    uint32_t value_;
+    uint32_t next_prime_;
+  };
+
+  ::std::ostream& operator<<(::std::ostream& os, const next_prime_params& p)
+  {
+    return os << "{Value: " << p.value_ << "; Next prime: " << p.next_prime_ << ";}";
+  }
+
+  class next_prime : public ::testing::TestWithParam<next_prime_params>
+  {
+  };
+
+  TEST_P(next_prime, next_prime)
+  {
+    next_prime_params p = GetParam();
+    EXPECT_EQ(math::next_prime(p.value_), p.next_prime_);
+  }
+
+  const next_prime_params _next_prime_data[] = {
+    {2, 3},
+    {3, 5},
+    {4, 5},
+    {5, 7},
+    {6, 7},
+    {7, 11},
+    {8, 11},
+    {9, 11},
+    {10, 11},
+    {2000, 2003},
+    {2003, 2011},
+    {2011, 2017},
+    {2016, 2017},
+    {2017, 2027},
+    {8080, 8081},
+    {8081, 8087},
+    {8088, 8089},
+    {8089, 8093},
+    {8100, 8101},
+    {16367, 16369},
+    {16371, 16381},
+    {16382, 16411},
+  };
+
+  INSTANTIATE_TEST_CASE_P(next_prime, next_prime, ::testing::ValuesIn(_next_prime_data));
 }
 

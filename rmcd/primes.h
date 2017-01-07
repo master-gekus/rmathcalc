@@ -1,10 +1,25 @@
 #ifndef RMATHCALC_PRIMES_H_INCLUDED
 #define RMATHCALC_PRIMES_H_INCLUDED
 
+#include <cstdint>
 #include <limits>
+#include <functional>
 
 namespace math
 {
+  enum
+  {
+    /** \brief Maximum count of primes numbers
+     *
+     * Stored prime numbers are stored during checkin number to be a prime and are used for
+     * fast checking in next case. Stored only 32-bit prime numbers.
+     *
+     * Becouse of only 32-bit numbers only a stored, total memory needed to store is
+     * sizeof(uint32_t) * MAX_STORED_PRIMES.
+     */
+    MAX_STORED_PRIMES = 10 * 1024 * 1024,
+  };
+
   /**
    * @brief Calculates floor of square root
    * @param value Value to find floor of square root of
@@ -26,7 +41,7 @@ namespace math
     if (3 >= value)
       return 1;
 
-    T result, devider = (value / 2);
+    T result, devider = (value >> 1);
     do
       {
         result = devider;
@@ -36,6 +51,19 @@ namespace math
 
     return result;
   }
+
+  /**
+   * @brief Calculates next prime value
+   * @param value The value from which to search for the next prime number.
+   * @param check_interrupt Interrupt check point.
+   * @return The first prime number greater than specified.
+   *
+   * If the calculated prime number exceeds maximum of uint32_t, 0 returned.
+   *
+   * check_interrupt is regulary called during calculation and can be used to interrupt process
+   * by throwing an exception. For example,this can be ::boost::this_thread::interruption_point()
+   */
+  uint32_t next_prime(uint32_t value, std::function<void()> check_interrupt = nullptr);
 }
 
 #endif // RMATHCALC_PRIMES_H_INCLUDED
