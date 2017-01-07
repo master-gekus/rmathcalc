@@ -26,7 +26,7 @@ namespace math
     if (3 >= value)
       return 1;
 
-    T result, devider = value;
+    T result, devider = (value / 2);
     do
       {
         result = devider;
