@@ -2,6 +2,8 @@
 #define _RMATHCALC_APP_INCLUDED_
 
 #include <string>
+#include <mutex>
+#include <condition_variable>
 
 namespace mathcalc
 {
@@ -30,6 +32,21 @@ private:
 
 private:
   mathcalc::MathCalcClient* client_;
+  std::string host_;
+  int port_;
+
+// Async work support
+private:
+  void async_workloop();
+  void async_worker();
+  bool wait_not_busy(bool set_busy);
+
+private:
+  bool async_busy_;
+  std::mutex async_mutext_;
+  std::condition_variable async_cond_;
+  char async_cmd_;
+  std::string async_params_;
 };
 
 #endif // ifndef _RMATHCALC_APP_INCLUDED_

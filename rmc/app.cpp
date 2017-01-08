@@ -2,6 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <thread>
+#include <chrono>
 
 #include <boost/algorithm/string.hpp>
 
@@ -21,9 +23,10 @@ using namespace apache::thrift::transport;
 using namespace mathcalc;
 
 MathCalcClientApp::MathCalcClientApp() :
-  client_(nullptr)
+  client_(nullptr),
+  async_busy_(true),
+  async_cmd_('?')
 {
-
 }
 
 MathCalcClientApp::~MathCalcClientApp()
@@ -382,11 +385,98 @@ MathCalcClientApp::exec(int argc, char *argv[])
            << "\". Port must be an integer value in range 1..65535." << endl;
       return 1;
     }
+  host_ = host;
+  port_ = port;
 
-  if (!connect(host, port))
+//  if (!connect(host, port))
+//    {
+//      return 1;
+//    }
+
+  async_workloop();
+
+  return 0;
+}
+
+bool
+MathCalcClientApp::wait_not_busy(bool set_busy)
+{
+  unique_lock<mutex> lock(async_mutext_);
+  async_cond_.wait(lock, [this](){return !async_busy_;});
+  async_busy_ = set_busy;
+  return ('Q' != async_cmd_);
+}
+
+void
+MathCalcClientApp::async_workloop()
+{
+  thread worker([this](){async_worker();});
+
+  while (true)
     {
-      return 1;
-    }
+      if (!wait_not_busy(false))
+        break;
 
-  return workloop();
+      cout << "rmc>";
+      string s;
+      getline(cin, s);
+      boost::algorithm::trim(s);
+
+      if (s.empty())
+        {
+          continue;
+        }
+
+      if ('#' == s[0])
+        {
+          s.erase(0,1);
+          boost::algorithm::trim_left(s);
+          if (s.empty())
+            {
+              continue;
+            }
+        }
+
+      async_cmd_ =toupper(s[0]);
+      s.erase(0,1);
+      async_params_ = boost::algorithm::trim_left_copy(s);
+
+      if (!wait_not_busy(true))
+        break;
+
+      async_cond_.notify_all();
+    }
+  cout << "Good bye!" << endl;
+
+  worker.join();
+}
+
+void
+MathCalcClientApp::async_worker()
+{
+  async_cmd_ = 'Q';
+
+
+
+  cout << "async_worker() started." << endl;
+  this_thread::sleep_for(chrono::seconds(2));
+
+  {
+    lock_guard<mutex> lock(async_mutext_);
+    async_busy_ = false;
+  }
+  async_cond_.notify_all();
+
+  {
+    unique_lock<mutex> lock(async_mutext_);
+    //if (cv.wait_for(lk, idx*100ms, []{return i == 1;}))
+    async_cond_.wait(lock, [this](){return async_busy_;});
+    async_busy_ = true;
+  }
+
+  cout << "Command received." << endl;
+
+  this_thread::sleep_for(chrono::seconds(2));
+
+  cout << "async_worker() finished." << endl;
 }
