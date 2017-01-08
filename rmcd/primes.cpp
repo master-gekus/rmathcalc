@@ -273,12 +273,14 @@ namespace
 }
 
 #ifdef GTEST_INVOKED
-size_t _const_primes_count()
+size_t
+_const_primes_count()
 {
   return const_primes_count;
 }
 
-uint32_t _const_prime(size_t index)
+uint32_t
+_const_prime(size_t index)
 {
   return const_primes[index];
 }
@@ -286,7 +288,8 @@ uint32_t _const_prime(size_t index)
 
 namespace
 {
-  void _safe_push_pack_new_prime(uint32_t value)
+  void
+  _safe_push_pack_new_prime(uint32_t value)
   {
     boost::unique_lock<boost::shared_mutex> lock(stored_primes_guard);
     if (stored_primes.empty()
@@ -295,7 +298,8 @@ namespace
       stored_primes.push_back(value);
   }
 
-  bool _is_prime_int(uint32_t value, std::function<void()> check_interrupt)
+  bool
+  _is_prime_int(uint32_t value, std::function<void()> check_interrupt)
   {
       // Checking in const table
     uint32_t root = math::sqrt_floor(value);
@@ -348,7 +352,8 @@ namespace
   }
 }
 
-bool math::is_prime(uint32_t value, std::function<void()> check_interrupt)
+bool
+math::is_prime(uint32_t value, std::function<void()> check_interrupt)
 {
   if (2 > value)
     return false;
@@ -366,7 +371,8 @@ bool math::is_prime(uint32_t value, std::function<void()> check_interrupt)
   return _is_prime_int(value, check_interrupt);
 }
 
-uint32_t math::next_prime(uint32_t value, std::function<void()> check_interrupt)
+uint32_t
+math::next_prime(uint32_t value, std::function<void()> check_interrupt)
 {
   uint32_t last_check = const_primes[const_primes_count - 1];
   bool update_storage = true;
@@ -409,4 +415,45 @@ uint32_t math::next_prime(uint32_t value, std::function<void()> check_interrupt)
     }
 }
 
+void
+math::factorize(std::vector<uint64_t>& result, uint64_t value,
+                std::function<void()> check_interrupt)
+{
+  result.clear();
+  if (4 > value)
+    {
+      result.push_back(value);
+      return;
+    }
 
+  while (0 == (value & 0x1))
+    {
+      result.push_back(2);
+      value >>= 1;
+    }
+  if (1 == value)
+    return;
+
+  if (check_interrupt)
+    check_interrupt();
+
+  uint32_t root = static_cast<uint32_t>(math::sqrt_floor(value));
+  for (uint32_t prime = 3; prime <= root; prime = math::next_prime(prime, check_interrupt))
+    {
+      if (check_interrupt)
+        check_interrupt();
+
+      bool changed = false;
+      while (0 == (value % static_cast<uint64_t>(prime)))
+        {
+          result.push_back(static_cast<uint64_t>(prime));
+          value /= static_cast<uint64_t>(prime);
+          changed = true;
+        }
+      if (changed)
+        root = static_cast<uint32_t>(math::sqrt_floor(value));
+    }
+
+  if (1 != value)
+    result.push_back(value);
+}

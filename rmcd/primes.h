@@ -72,6 +72,19 @@ namespace math
    * If the calculated prime number exceeds maximum of uint32_t, 0 returned.
    */
   uint32_t next_prime(uint32_t value, std::function<void()> check_interrupt = nullptr);
+
+  //Factorizing number (decomposes into prime factors)
+  /**
+   * @brief Factorizes the number (decomposes it into prime factors)
+   * @param [out] result Result of factorization
+   * @param [in] value Number to factorize
+   * @param [in] check_interrupt Interrupt check point (see description of \ref is_prime)
+   *
+   * If value is prime, result will contents only one element - value.
+   */
+  void factorize(std::vector<uint64_t>& result, uint64_t value,
+                 std::function<void()> check_interrupt = nullptr);
+
 }
 
 #endif // RMATHCALC_PRIMES_H_INCLUDED

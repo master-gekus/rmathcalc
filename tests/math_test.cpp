@@ -210,5 +210,62 @@ namespace test_primes
   };
 
   INSTANTIATE_TEST_CASE_P(next_prime, next_prime, ::testing::ValuesIn(_next_prime_data));
+
+  // ///////////////////////////////////////////////////////////////////////////////////////
+  struct factorize_params
+  {
+    uint64_t value_;
+    std::vector<uint64_t> result_;
+  };
+
+  template<typename T>
+  ::std::ostream& operator<<(::std::ostream& os, const std::vector<T>& v)
+  {
+    os << "[";
+    for (size_t i = 0; i < v.size(); i++)
+      {
+        if (0 != i)
+          os << ", ";
+        os << v[i];
+      }
+    os << "]";
+    return os;
+  }
+
+  ::std::ostream& operator<<(::std::ostream& os, const factorize_params& p)
+  {
+    return os << "{Value: " << p.value_ << "; Factorization: " << p.result_ << "}";
+  }
+
+  class factorize : public ::testing::TestWithParam<factorize_params>
+  {
+  };
+
+  TEST_P(factorize, factorize)
+  {
+    factorize_params p = GetParam();
+    std::vector<uint64_t> r;
+    math::factorize(r, p.value_);
+    EXPECT_EQ(r, p.result_);
+  }
+
+  const factorize_params _factorize_data[] = {
+    {1, {1}},
+    {2, {2}},
+    {3, {3}},
+    {4, {2,2}},
+    {8, {2,2,2}},
+    {1024, {2,2,2,2,2,2,2,2,2,2}},
+    {9, {3,3}},
+    {27, {3,3,3}},
+    {81, {3,3,3,3}},
+    {17839UL*17851UL*17863UL, {17839, 17851, 17863}},
+    {4294967291UL, {4294967291UL}},
+    {289000001UL*324000029UL, {289000001UL,324000029UL}}, // 233881 ms
+    {289000001UL*324000029UL, {289000001UL,324000029UL}}, // 102980 ms
+    //    {4294967291UL*4294967291UL, {4294967291UL, 4294967291UL}}, // too long...
+  };
+
+  INSTANTIATE_TEST_CASE_P(factorize, factorize, ::testing::ValuesIn(_factorize_data));
 }
 
