@@ -5,6 +5,7 @@
 #include <boost/chrono/chrono.hpp>
 
 #include "math_calc_handler.h"
+#include "primes.h"
 
 using namespace std;
 
@@ -151,9 +152,8 @@ MathCalcHandler::createTask(OpResult& _return, const TaskType::type type,
 
       th.thread_ = boost::thread([&th]()
         {
-          boost::this_thread::sleep_for(boost::chrono::milliseconds(th.task_.params[0]));
-          th.result.push_back(2017); // Fake, fake, but it is a prime!
-          cout << "Thread finished!" << endl;
+          math::factorize(reinterpret_cast<vector<uint64_t>&>(th.result), th.task_.params[0],
+                          boost::this_thread::interruption_point);
           th.is_running_ = false;
         });
     }
