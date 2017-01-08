@@ -415,6 +415,57 @@ math::next_prime(uint32_t value, std::function<void()> check_interrupt)
     }
 }
 
+namespace
+{
+  struct factorize_data
+  {
+    std::vector<uint64_t>& result_;
+    std::function<void()> check_interrupt_;
+    uint64_t value_, root_;
+
+    bool _check_devider(uint64_t devider)
+    {
+      if (check_interrupt_)
+        check_interrupt_();
+
+      if (devider > root_)
+        {
+          if (1 != value_)
+            result_.push_back(value_);
+          return true;
+        }
+
+      if (0 != (value_ % devider))
+        return false;
+
+      do
+        {
+          result_.push_back(devider);
+          value_ /= devider;
+        }
+      while(0 == (value_ % devider));
+
+      if (check_interrupt_)
+        check_interrupt_();
+
+      root_ = math::sqrt_floor(value_);
+
+      if (check_interrupt_)
+        check_interrupt_();
+
+      if (devider > root_)
+        {
+          if (1 != value_)
+            result_.push_back(value_);
+          return true;
+        }
+
+      return false;
+    }
+  };
+
+}
+
 void
 math::factorize(std::vector<uint64_t>& result, uint64_t value,
                 std::function<void()> check_interrupt)
@@ -437,23 +488,15 @@ math::factorize(std::vector<uint64_t>& result, uint64_t value,
   if (check_interrupt)
     check_interrupt();
 
-  uint32_t root = static_cast<uint32_t>(math::sqrt_floor(value));
-  for (uint32_t prime = 3; prime <= root; prime = math::next_prime(prime, check_interrupt))
-    {
-      if (check_interrupt)
-        check_interrupt();
+  factorize_data fd{result, check_interrupt, value, math::sqrt_floor(value)};
 
-      bool changed = false;
-      while (0 == (value % static_cast<uint64_t>(prime)))
-        {
-          result.push_back(static_cast<uint64_t>(prime));
-          value /= static_cast<uint64_t>(prime);
-          changed = true;
-        }
-      if (changed)
-        root = static_cast<uint32_t>(math::sqrt_floor(value));
-    }
+  for (size_t i = 1; i < const_primes_count; i++)
+    if (fd._check_devider(static_cast<uint64_t>(const_primes[i])))
+      return;
 
-  if (1 != value)
-    result.push_back(value);
+  for (uint64_t devider = const_primes[const_primes_count - 1]
+                          + (((const_primes[const_primes_count - 1] % 6) == 1) ? 4 : 2);;
+       devider += (((devider % 6) == 1) ? 4 :2))
+    if (fd._check_devider(devider))
+      return;
 }
