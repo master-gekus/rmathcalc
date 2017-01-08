@@ -141,6 +141,16 @@ namespace test_primes
     {16381, true},
     {16411, true},
     {17865, false},
+    {262627, true},
+    {262629, false},
+    {787877, false},
+    {787879, true},
+    {787881, false},
+    {289000001, true},
+    {324000029, true},
+    {324000031, false},
+    {4294967289, false},
+    {4294967291, true},
   };
 
   INSTANTIATE_TEST_CASE_P(is_prime, is_prime, ::testing::ValuesIn(_is_prime_data));

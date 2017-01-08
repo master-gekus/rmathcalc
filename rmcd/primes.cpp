@@ -1,4 +1,8 @@
 #include <algorithm>
+#include <vector>
+
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 #include "primes.h"
 
@@ -263,6 +267,9 @@ namespace
     17789, 17791, 17807, 17827, 17837, 17839, 17851, 17863,
   };
   const size_t const_primes_count = sizeof(const_primes)/sizeof(const_primes[0]);
+
+  std::vector<uint32_t> stored_primes;
+  boost::shared_mutex stored_primes_guard;
 }
 
 #ifdef GTEST_INVOKED
@@ -277,12 +284,81 @@ uint32_t _const_prime(size_t index)
 }
 #endif
 
+namespace
+{
+  bool _is_prime_int(uint32_t value, std::function<void()> check_interrupt)
+  {
+      // Checking in const table
+    uint32_t root = math::sqrt_floor(value);
+    for (size_t i = 0; i < const_primes_count; ++i)
+      {
+        if (check_interrupt)
+          check_interrupt();
+        if (const_primes[i] > root)
+          return true;
+        if (0 == (value % const_primes[i]))
+          return false;
+      }
+
+    // Checking in stored table
+    size_t stored_primes_count;
+    {
+      boost::shared_lock<boost::shared_mutex> lock(stored_primes_guard);
+      stored_primes_count = stored_primes.size();
+    }
+
+    uint32_t last_checked = const_primes[const_primes_count - 1];
+    for (size_t i = 0; i < stored_primes_count; ++i)
+      {
+        {
+          boost::shared_lock<boost::shared_mutex> lock(stored_primes_guard);
+          last_checked = stored_primes[i];
+        }
+        if (check_interrupt)
+          check_interrupt();
+        if (last_checked > root)
+          return true;
+        if (0 == (value % last_checked))
+          return false;
+      }
+
+    for(last_checked += 2; last_checked < root; last_checked += 2)
+      {
+        if ((stored_primes_count < math::MAX_STORED_PRIMES)
+            && _is_prime_int(last_checked, check_interrupt))
+          {
+            boost::unique_lock<boost::shared_mutex> lock(stored_primes_guard);
+            if (stored_primes.empty()
+                || ((stored_primes.size() < math::MAX_STORED_PRIMES)
+                    && (last_checked > stored_primes.back())))
+              stored_primes.push_back(last_checked);
+          }
+        if (check_interrupt)
+          check_interrupt();
+        if (0 == (value % last_checked))
+          return false;
+      }
+
+    return true;
+  }
+}
+
 bool math::is_prime(uint32_t value, std::function<void()> check_interrupt)
 {
+  if (2 > value)
+    return false;
+
   if (const_primes[const_primes_count - 1] >= value)
     return ((*std::lower_bound(const_primes, &(const_primes[const_primes_count]), value)) == value);
 
-  return false;
+  {
+    boost::shared_lock<boost::shared_mutex> lock(stored_primes_guard);
+    if ((!stored_primes.empty()) && (stored_primes.back() >= value))
+      return ((*std::lower_bound(stored_primes.cbegin(), stored_primes.cend(), value)) == value);
+  }
+
+  // value not found in both tables - let's check
+  return _is_prime_int(value, check_interrupt);
 }
 
 uint32_t math::next_prime(uint32_t value, std::function<void()> check_interrupt)

@@ -44,6 +44,6 @@ else()
     )
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} boost_system boost_thread)
 
 add_test(${PROJECT_NAME} ${PROJECT_NAME})
