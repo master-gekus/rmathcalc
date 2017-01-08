@@ -7,19 +7,6 @@
 
 namespace math
 {
-  enum
-  {
-    /** \brief Maximum count of primes numbers
-     *
-     * Stored prime numbers are stored during checkin number to be a prime and are used for
-     * fast checking in next case. Stored only 32-bit prime numbers.
-     *
-     * Becouse of only 32-bit numbers only a stored, total memory needed to store is
-     * sizeof(uint32_t) * MAX_STORED_PRIMES.
-     */
-    MAX_STORED_PRIMES = 10 * 1024 * 1024,
-  };
-
   /**
    * @brief Calculates floor of square root
    * @param value Value to find floor of square root of
