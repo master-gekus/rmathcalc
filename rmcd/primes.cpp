@@ -286,6 +286,15 @@ uint32_t _const_prime(size_t index)
 
 namespace
 {
+  void _safe_push_pack_new_prime(uint32_t value)
+  {
+    boost::unique_lock<boost::shared_mutex> lock(stored_primes_guard);
+    if (stored_primes.empty()
+        || ((stored_primes.size() < math::MAX_STORED_PRIMES)
+            && (value > stored_primes.back())))
+      stored_primes.push_back(value);
+  }
+
   bool _is_prime_int(uint32_t value, std::function<void()> check_interrupt)
   {
       // Checking in const table
@@ -326,15 +335,11 @@ namespace
       {
         if ((stored_primes_count < math::MAX_STORED_PRIMES)
             && _is_prime_int(last_checked, check_interrupt))
-          {
-            boost::unique_lock<boost::shared_mutex> lock(stored_primes_guard);
-            if (stored_primes.empty()
-                || ((stored_primes.size() < math::MAX_STORED_PRIMES)
-                    && (last_checked > stored_primes.back())))
-              stored_primes.push_back(last_checked);
-          }
+          _safe_push_pack_new_prime(last_checked);
+
         if (check_interrupt)
           check_interrupt();
+
         if (0 == (value % last_checked))
           return false;
       }
@@ -364,11 +369,44 @@ bool math::is_prime(uint32_t value, std::function<void()> check_interrupt)
 uint32_t math::next_prime(uint32_t value, std::function<void()> check_interrupt)
 {
   uint32_t last_check = const_primes[const_primes_count - 1];
+  bool update_storage = true;
 
   if (last_check > value)
     return *std::upper_bound(const_primes, &(const_primes[const_primes_count]), value);
 
-  return 0;
+  {
+    boost::shared_lock<boost::shared_mutex> lock(stored_primes_guard);
+    if (!stored_primes.empty())
+      {
+        last_check = stored_primes.back();
+        if (last_check > value)
+          return *std::upper_bound(stored_primes.cbegin(), stored_primes.cend(), value);
+      }
+    update_storage = (stored_primes.size() < math::MAX_STORED_PRIMES);
+  }
+
+  if (check_interrupt)
+    check_interrupt();
+
+  if (0 == (value & 0x1))
+    --value;
+  if (last_check != value)
+    {
+      update_storage = false;
+    }
+
+  for (value += 2;;value += 2)
+    {
+      if (value > (std::numeric_limits<uint32_t>::max() - 2))
+        return 0;
+
+      if (_is_prime_int(value, check_interrupt))
+        {
+          if (update_storage)
+            _safe_push_pack_new_prime(value);
+          return value;
+        }
+    }
 }
 
 

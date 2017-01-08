@@ -200,6 +200,13 @@ namespace test_primes
     {16367, 16369},
     {16371, 16381},
     {16382, 16411},
+    {17863, 17881},
+    {17864, 17881},
+    {17882, 17891},
+    {17891, 17903},
+    {17903, 17909},
+    {4294967289, 4294967291},
+    {4294967291, 0},
   };
 
   INSTANTIATE_TEST_CASE_P(next_prime, next_prime, ::testing::ValuesIn(_next_prime_data));
