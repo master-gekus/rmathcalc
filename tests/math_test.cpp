@@ -261,11 +261,23 @@ namespace test_primes
     {81, {3,3,3,3}},
     {17839UL*17851UL*17863UL, {17839, 17851, 17863}},
     {4294967291UL, {4294967291UL}},
-    {289000001UL*324000029UL, {289000001UL,324000029UL}}, // 233881 ms
-    {289000001UL*324000029UL, {289000001UL,324000029UL}}, // 102980 ms
-    //    {4294967291UL*4294967291UL, {4294967291UL, 4294967291UL}}, // too long...
+    {15347,{103,149}},
+    {89755,{5,29,619}},
+    {2345678917UL,{2345678917UL}},
+    {8616460799UL,{89681, 96079}},
   };
 
-  INSTANTIATE_TEST_CASE_P(factorize, factorize, ::testing::ValuesIn(_factorize_data));
+  const factorize_params _factorize_data_bn[] = {
+    {289000001UL*324000029UL, {289000001UL,324000029UL}},
+    {4294967291UL*4294967291UL + 2, {3, 89, 4283, 16130966368003UL}},
+    {18446744073709551557UL, {18446744073709551557UL}},
+    {4294967291UL*4294967291UL, {4294967291UL, 4294967291UL}},
+  };
+
+  INSTANTIATE_TEST_CASE_P(factorize_small_numbers,
+                          factorize, ::testing::ValuesIn(_factorize_data));
+
+  INSTANTIATE_TEST_CASE_P(DISABLED_factorize_big_numbers,
+                          factorize, ::testing::ValuesIn(_factorize_data_bn));
 }
 
