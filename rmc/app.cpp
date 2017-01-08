@@ -352,6 +352,8 @@ MathCalcClientApp::connect(const std::string& host, int port)
 int
 MathCalcClientApp::exec(int argc, char *argv[])
 {
+  cout << "RMathCalc client version " << GIT_DESCRIBE << endl;
+
   string host("localhost");
   int port = 9876;
 

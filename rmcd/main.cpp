@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     boost::make_shared<TBufferedTransportFactory>(),
     boost::make_shared<TBinaryProtocolFactory>());
 
-  cout << "Starting the server..." << endl;
+  cout << "Starting the RMathCalc server version " << GIT_DESCRIBE << "..." << endl;
   server.serve();
   cout << "Done." << endl;
   return 0;
